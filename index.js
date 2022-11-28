@@ -28,7 +28,7 @@ instrument(io, {
   mode: "development",
 });
 
-const rooms = {};
+const users = [];
 
 io.on("connection", (socket) => {
   socket.on("join_game", (currentRoom, currentUser) => {
@@ -45,18 +45,22 @@ io.on("connection", (socket) => {
       });
     } else {
       socket.join(currentRoom);
-      socket.emit("room_joined", currentUser);
+      socket.to(currentRoom).emit("room_joined", currentUser);
+      users.push(currentUser);
       if (io.sockets.adapter.rooms.get(currentRoom).size === 2) {
-        socket.emit("start_game", { start: true, symbol: "x" });
+        socket.emit("start_game", { start: true, symbol: "x", users });
         socket
           .to(currentRoom)
-          .emit("start_game", { start: false, symbol: "o" });
+          .emit("start_game", { start: false, symbol: "o", users });
       }
     }
   });
-  socket.on("update_game", (board) => {
-    console.log(board);
+  socket.on("update_game", (message) => {
     const gameRoom = getRoom(socket);
-    socket.to(gameRoom).emit("on_game_update", board);
+    socket.to(gameRoom).emit("on_game_update", message);
+  });
+  socket.on("user_leaving", (user) => {
+    const gameRoom = getRoom(socket);
+    socket.to(gameRoom).emit("user_leaved", user);
   });
 });
