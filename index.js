@@ -63,4 +63,8 @@ io.on("connection", (socket) => {
     const gameRoom = getRoom(socket);
     socket.to(gameRoom).emit("user_leaved", user);
   });
+  socket.on("game_ended", (winner) => {
+    const gameRoom = getRoom(socket);
+    socket.to(gameRoom).emit("game_ended", winner);
+  });
 });
